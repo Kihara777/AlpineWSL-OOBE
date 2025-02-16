@@ -9,7 +9,7 @@ Enhance your alpine experience, for WSL users.
 Install alpine with [this](https://apps.microsoft.com/detail/9P804CRF0395) helper application.\
 Execute ```oobe.sh``` or setup manually.
 
-## Step by step
+## OOBE explained
 ### Repository
 > [!NOTE]
 > If you prefer stable release, then replace all ```edge``` with ```latest-stable```, you can skip this section to avoid unexpected release upgrades.
@@ -52,7 +52,7 @@ ORC
   apk add grep
   ```
   to fix the problem.
-- Since OpenRC works, we can use docker for further development:
+- Since OpenRC functional, we can use docker for further development now:
   ```
   apk add docker docker-cli-compose
   rc-update add docker default
@@ -65,11 +65,11 @@ ORC
 
 ## Mass-Storage and UVCVideo support
 The WSL kernel has builtin USB/IP support but no actually USB drivers provided by default, so let's do this.
+You can run ```kernel.sh``` to automatically build a kernel, or again, step by step.
 ### Prepare
-Make sure you have /mnt/c/ in your alpine WSL, if it doesn't, simply start a PowerShell window and then type  ```bash``` to mount the C: volume, or ```wsl``` if you didn't install bash.
+Make sure you have ```/mnt/c/``` in your alpine WSL, if it doesn't, simply start a PowerShell window and then type  ```bash``` to mount the C: volume, or ```wsl``` if you didn't install bash.
 > [!NOTE]
 > The ```sh``` will drop you into a Windows sh environment, not the WSL one.
-Plus, we don't have to specify a USERNAME variable, instead we call ```powershell.exe``` directly and a little hacking stuff to get a useable path.
 ```
 cd ~/
 TAGVERNUM=$(uname -r | sed -r "s/-.+\+?//g")
@@ -115,23 +115,17 @@ To enable USB Mass-Storage amd UVCVideo support, go:
     [*] USB support  --->
         <*>   USB Mass Storage support
 ```
-### Build
+### Build and install
 ```
 docker exec ub make -j$(nproc) KCONFIG_CONFIG=.config
 docker exec ub make modules -j$(nproc) KCONFIG_CONFIG=.config
 ```
-### Insall modules
-Now we can terminate the docker
+Now we can terminate the docker, and install kernel modules
 ```
 docker stop ub
-```
-Install required packages and kernel modules
-```
-apk add alpine-sdk
 make modules_install -j$(nproc)
-```
-### Update the kernel
-This will update the kernel and the wslconfig file inside %USERPROFILE% at Windows side:
+```l
+Finally, update the kernel and the ```.wslconfig``` file to ```%USERPROFILE%```:
 ```
 rm -f ${WSL_USERPROFILE}/vmlinux
 cp ./vmlinux $WSL_USERPROFILE/
