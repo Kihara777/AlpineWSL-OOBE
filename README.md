@@ -124,7 +124,7 @@ Now we can terminate the docker, and install kernel modules
 ```
 docker stop ub
 make modules_install -j$(nproc)
-```l
+```
 Finally, update the kernel and the ```.wslconfig``` file to ```%USERPROFILE%```:
 ```
 rm -f ${WSL_USERPROFILE}/vmlinux
