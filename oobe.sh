@@ -18,7 +18,7 @@ chsh -s /bin/bash
 # VSCode Server runtime
 apk add libstdc++
 
-# Enable OpenRC init
+# Enable OpenRC on WSL
 cat <<ORC > /etc/wsl.conf
 [boot]
 command = "/sbin/openrc sysinit"
@@ -30,13 +30,19 @@ apk add curl grep
 # Install Docker
 apk add docker docker-cli-compose
 rc-update add docker default
+# Fix docker service
 sed -ri 's@#?need sysfs cgroups net@#need sysfs cgroups net@g' /etc/init.d/docker
 
 # Utilities
-apk add neofetch ffmpeg ffplay mpv bind-tools nmap lsblk
+# bind-tools: Want nslookup? Do it.
+# util-linux-misc: Need whereis whereis? That's it.
+apk add neofetch ffmpeg ffplay mpv bind-tools nmap lsblk util-linux-misc
 
 # Development
-apk add git alpine-sdk
+apk add vim git apptainer alpine-sdk
+# Apptainer might mount this, so uncomment it or setup-timezone instead.
+#ln -s /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
 sync
+# Because reboot requires a reboot to take effect, haha.
 wsl.exe --shutdown

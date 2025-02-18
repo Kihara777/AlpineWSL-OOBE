@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Prepare
 cd ~/
@@ -20,10 +20,11 @@ cp /proc/config.gz config.gz \
 docker run -itd --rm --name ub \
     -w /wsl \
     -v "${PWD}:/wsl" \
+    -e "DEBIAN_FRONTEND=noninteractive" \
     ubuntu /bin/bash
 
 docker exec ub apt update
-docker exec ub apt install -y build-essential flex bison \
+docker exec ub apt install -yq build-essential flex bison \
     libgtk-3-dev libelf-dev libncurses-dev autoconf \
     libudev-dev libtool zip unzip v4l-utils libssl-dev \
     python3-pip cmake git iputils-ping net-tools dwarves \
@@ -36,7 +37,8 @@ sed -ri 's/^# CONFIG_USB_VIDEO_CLASS_INPUT_EVDEV=y/CONFIG_USB_VIDEO_CLASS_INPUT_
 sed -ri 's/^# CONFIG_USB_STORAGE=y/CONFIG_USB_STORAGE=y/' .config
 
 # Build and install
-docker exec ub make -j$(nproc) KCONFIG_CONFIG=.config && docker stop ub
+docker exec ub make -j$(nproc) KCONFIG_CONFIG=.config && \
+    docker stop ub > /dev/null
 
 rm -f ${WSL_USERPROFILE}/vmlinux
 cp ./vmlinux $WSL_USERPROFILE/
