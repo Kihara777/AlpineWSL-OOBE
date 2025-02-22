@@ -29,13 +29,14 @@ apk add curl grep
 
 # Install Docker
 apk add docker docker-cli-compose
-rc-update add docker default
+rc-update add docker
 # Fix docker service
 sed -ri 's@#?need sysfs cgroups net@#need sysfs cgroups net@g' /etc/init.d/docker
 
 # Utilities
 # bind-tools: Want nslookup? Do it.
 # util-linux-misc: Need whereis whereis? That's it.
+# coreutils: Progressive dd?
 apk add neofetch ffmpeg ffplay mpv bind-tools nmap lsblk util-linux-misc
 
 # Development
