@@ -1,6 +1,6 @@
 #!/bin/sh
 
-WKB="WslKernelBuilder"
+WKB="wsl-kernel-builder"
 
 cd ~/
 echo "[Builder]    Current kernel:"
@@ -30,25 +30,43 @@ if [ ! -f ".config" ]; then
     sed -ri 's/^# CONFIG_USB_STORAGE=y/CONFIG_USB_STORAGE=y/' .config
 fi
 
-echo "[Builder]    Run Builder..."
-if ! docker ps -a | grep -q "$WKB"; then
-    docker run -itd --name $WKB \
+echo "[Builder]    Prepare environment..."
+if ! docker images -a | grep -q "$WKB"; then
+    echo "[Builder]    Build container..."
+    docker run -itd --rm --name ${WKB}-tmp \
         -w /wsl \
         -v "${PWD}:/wsl" \
         -e "DEBIAN_FRONTEND=noninteractive" \
-        ubuntu /bin/bash
-
-    docker exec $WKB apt update
-    docker exec $WKB apt install -yq build-essential flex bison \
+        ubuntu /bin/bash > /dev/null
+    docker exec $WKB-tmp apt update
+    docker exec $WKB-tmp apt install -yq build-essential flex bison \
     libgtk-3-dev libelf-dev libncurses-dev autoconf \
     libudev-dev libtool zip unzip v4l-utils libssl-dev \
     python3-pip cmake git iputils-ping net-tools dwarves \
     guvcview python-is-python3 bc
-
+    echo "[Builder]    Commit to image..."
+    docker commit $WKB-tmp $WKB > /dev/null && docker stop $WKB-tmp > /dev/null
+    echo "[Builder]    Run container..."
+    docker run -itd --name $WKB \
+        -w /wsl \
+        -v "${PWD}:/wsl" \
+        -e "DEBIAN_FRONTEND=noninteractive" \
+        $WKB /bin/bash > /dev/null
+elif docker ps -a | grep -q "$WKB"; then
+    echo echo "[Builder]    Start container..."
+    docker start $WKB > /dev/null
+else
+    echo "[Builder]    Restore container..."
+    docker run -itd --name $WKB \
+        -w /wsl \
+        -v "${PWD}:/wsl" \
+        -e "DEBIAN_FRONTEND=noninteractive" \
+        $WKB /bin/bash > /dev/null
 fi
-if [ "$@" = "menu" ]; then
+
+if [ "-$@" = "-menu" ]; then
     echo "[Builder]    Enter kernel config menu..."
-    docker exec -it ub make menuconfig
+    docker exec -it $WKB make menuconfig
 fi
 echo "[Builder]    Start build kernel..."
 docker exec $WKB make -j$(nproc) KCONFIG_CONFIG=.config && \
