@@ -31,7 +31,7 @@ if [ ! -f ".config" ]; then
 fi
 
 echo "[Builder]    Run Builder..."
-if ! docker images | grep -q "$WKB"; then
+if ! docker ps -a | grep -q "$WKB"; then
     docker run -itd --name $WKB \
         -w /wsl \
         -v "${PWD}:/wsl" \
