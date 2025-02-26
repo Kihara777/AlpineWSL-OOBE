@@ -34,10 +34,10 @@ chsh -s /bin/bash
 # VSCode Server runtime
 apk add libstdc++
 
-# Enable OpenRC init
+# Boot OpenRC services
 cat <<ORC > /etc/wsl.conf
 [boot]
-command = "/sbin/openrc sysinit"
+command = "/sbin/openrc sysinit && /sbin/openrc boot && /sbin/openrc default"
 ORC
 ```
 > [!NOTE]
@@ -60,7 +60,11 @@ ORC
   > [!NOTE]
   > If daemon failed to startup with system, try this:
   > ```
-  > sed -ri 's@#?need sysfs cgroups net@#need sysfs cgroups net@g' /etc/init.d/docker
+  > cat <<ENI > /etc/network/interfaces
+  > auto lo
+  > iface lo inet loopback
+  > iface lo inet6 loopback
+  > ENI
   > ```
 
 ## Mass-Storage and UVCVideo support

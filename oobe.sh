@@ -21,7 +21,7 @@ apk add libstdc++
 # Enable OpenRC on WSL
 cat <<ORC > /etc/wsl.conf
 [boot]
-command = "/sbin/openrc sysinit"
+command = "/sbin/openrc sysinit && /sbin/openrc boot && /sbin/openrc default"
 ORC
 
 # Common shell script requirements
@@ -29,15 +29,19 @@ apk add curl grep
 
 # Install Docker
 apk add docker docker-cli-compose
-rc-update add docker
-# Fix docker service
-sed -ri 's@#?need sysfs cgroups net@#need sysfs cgroups net@g' /etc/init.d/docker
+rc-update add docker default
+# Fix networking service, required by docker
+cat <<ENI > /etc/network/interfaces
+auto lo
+iface lo inet loopback
+iface lo inet6 loopback
+ENI
 
 # Utilities
-# bind-tools: Want nslookup? Do it.
+# bind-tools: Want nslookup and dig? Do it.
 # util-linux-misc: Need whereis whereis? That's it.
 # coreutils: Progressive dd?
-apk add neofetch ffmpeg ffplay mpv bind-tools nmap lsblk util-linux-misc
+apk add ffmpeg mpv bind-tools nmap lsblk util-linux-misc
 
 # Development
 apk add vim git apptainer alpine-sdk
