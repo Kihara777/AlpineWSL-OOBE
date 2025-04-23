@@ -39,14 +39,14 @@ ENI
 
 # Utilities
 # bind-tools: Want nslookup and dig? Do it.
-# util-linux-misc: Need whereis whereis? That's it.
+# util-linux: Need whereis whereis? That's it.
 # coreutils: Progressive dd?
-apk add ffmpeg mpv bind-tools nmap lsblk util-linux-misc
+apk add ffmpeg mpv bind-tools nmap lsblk util-linux coreutils findutils linux-tools
 
 # Development
 apk add vim git apptainer alpine-sdk
 # Apptainer might mount this, so uncomment it or setup-timezone instead.
-#ln -s /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+ln -s /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
 sync
 # Because reboot requires a reboot to take effect, haha.

@@ -74,11 +74,11 @@ docker exec $WKB make -j$(nproc) KCONFIG_CONFIG=.config && \
 
 echo "[Builder]    Install new kernel..."
 rm -f ${WSL_USERPROFILE}/vmlinux
-cp ./vmlinux $WSL_USERPROFILE/
-cat <<WSL > ${WSL_USERPROFILE}/.wslconfig
+cp ./vmlinux "$WSL_USERPROFILE/"
+cat <<WSL > "${WSL_USERPROFILE}/.wslconfig"
 [wsl2]
-kernel=${WIN_USERPROFILE}\vmlinux
+kernel="${WIN_USERPROFILE}\vmlinux"
 WSL
-sed -i 's#\\#\\\\#g' ${WSL_USERPROFILE}/.wslconfig
+sed -i 's#\\#\\\\#g' "${WSL_USERPROFILE}/.wslconfig"
 
 wsl.exe --shutdown
