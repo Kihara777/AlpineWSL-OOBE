@@ -34,7 +34,7 @@ chsh -s /bin/bash
 # VSCode Server runtime
 apk add libstdc++
 
-# Boot OpenRC services
+# Enable OpenRC on WSL
 cat <<ORC > /etc/wsl.conf
 [boot]
 command = "/sbin/openrc sysinit && /sbin/openrc boot && /sbin/openrc default"
@@ -68,46 +68,22 @@ ORC
   > ```
 
 ## Mass-Storage and UVCVideo support
+> [!NOTE]
+> Unavailiable for 6.6 Kernel, exploring workrounds
+> See [this issue](https://github.com/microsoft/WSL/issues/11738) for more info.
+>
 The WSL kernel has builtin USB/IP support but no actually USB drivers provided by default, so let's do this.
-You can run ```kernel.sh``` to automatically build a kernel, or again, step by step.
+You can run ```kernel.sh``` to automatically build a kernel.
+> [!NOTE]
+> If you see errors like 
+> ```
+> . : File C:\Users\HarukaX\Documents\WindowsPowerShell\profile.ps1 cannot be loaded because running scripts is disabled
+> ``` 
+> Please enable it in Developer Settings > PowerShell section.
 ### Prepare
 Make sure you have ```/mnt/c/``` in your alpine WSL, if it doesn't, simply start a PowerShell window and then type  ```bash``` to mount the C: volume, or ```wsl``` if you didn't install bash.
 > [!NOTE]
 > The ```sh``` will drop you into a Windows sh environment, not the WSL one.
-```
-cd ~/
-TAGVERNUM=$(uname -r | sed -r "s/-.+\+?//g")
-TAGVER=linux-msft-wsl-${TAGVERNUM}
-WIN_USERPROFILE=$(powershell.exe '$env:USERPROFILE' | sed -r 's#\r##g')
-WSL_USERPROFILE=$(wslpath -u "$WIN_USERPROFILE")
-```
-Then we clone the kernel source and copy the current kernel config
-```
-rm -rf *-microsoft-standard
-git clone --depth 1 -b ${TAGVER} \
-    https://github.com/microsoft/WSL2-Linux-Kernel.git \
-    ${TAGVERNUM}-microsoft-standard
-cd ${TAGVERNUM}-microsoft-standard
-
-cp /proc/config.gz config.gz \
-    && gunzip config.gz \
-    && mv config .config
-```
-Create a one-time ubuntu docker
-```
-docker run -itd --rm --name ub \
-    -w /wsl \
-    -v "${PWD}:/wsl" \
-    ubuntu /bin/bash
-
-docker exec ub apt update
-docker exec ub apt install -y build-essential flex bison \
-    libgtk-3-dev libelf-dev libncurses-dev autoconf \
-    libudev-dev libtool zip unzip v4l-utils libssl-dev \
-    python3-pip cmake git iputils-ping net-tools dwarves \
-    guvcview python-is-python3 bc
-docker exec -it ub make menuconfig
-```
 ### Configure
 To enable USB Mass-Storage amd UVCVideo support, go:
 ```     
@@ -119,29 +95,6 @@ To enable USB Mass-Storage amd UVCVideo support, go:
     [*] USB support  --->
         <*>   USB Mass Storage support
 ```
-### Build and install
-```
-docker exec ub make -j$(nproc) KCONFIG_CONFIG=.config
-docker exec ub make modules -j$(nproc) KCONFIG_CONFIG=.config
-```
-Now we can terminate the docker, and install kernel modules
-```
-docker stop ub
-make modules_install -j$(nproc)
-```
-Finally, update the kernel and the ```.wslconfig``` file to ```%USERPROFILE%```:
-```
-rm -f ${WSL_USERPROFILE}/vmlinux
-cp ./vmlinux $WSL_USERPROFILE/
-cat <<WSL > ${WSL_USERPROFILE}/.wslconfig
-[wsl2]
-kernel=${WIN_USERPROFILE}\vmlinux
-WSL
-sed -i 's#\\#\\\\#g' ${WSL_USERPROFILE}/.wslconfig
-wsl.exe --shutdown
-```
-> [!NOTE]
-> if you modified ```.wslconfig``` previously, make sure to make a backup and skip this section, then edit the file manually.
 
 
 # Credits
